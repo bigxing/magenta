@@ -1,11 +1,11 @@
 include "kernel/include/mdi/kernel-defs.mdi"
 
 cpu-map = {
-    clusters = [
+    clusters = {
         {
             id = 0
             name = "silver"
-            cpus = [
+            cpus = {
                 {
                     id = 0
                 }
@@ -18,12 +18,12 @@ cpu-map = {
                 {
                     id = 3
                 }
-            ]
+            }
         }
         {
             id = 1
             name = "gold"
-            cpus = [
+            cpus = {
                 {
                     id = 0
                 }
@@ -36,8 +36,8 @@ cpu-map = {
                 {
                     id = 3
                 }
-            ]
+            }
         }
-    ]
+    }
 }
 

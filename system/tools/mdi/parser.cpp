@@ -45,58 +45,6 @@ static bool find_node_id(Tokenizer& tokenizer, std::string id_name, mdi_id_t& ou
 }
 
 static bool parse_id_declaration(Tokenizer& tokenizer, mdi_type_t type) {
-    mdi_type_t element_type = MDI_INVALID_TYPE;
-
-    if (type == MDI_ARRAY) {
-        // array declarations are followed by child type
-        Token token;
-        if (!tokenizer.next_token(token)) {
-            return false;
-        }
-        if (token.type == TOKEN_EOF) {
-            tokenizer.print_err("end of file while parsing ID declaration\n");
-            return false;
-        }
-        if (token.type != TOKEN_ARRAY_START) {
-            tokenizer.print_err("expected \'[' after \"array\"\n");
-            return false;
-        }
-        if (!tokenizer.next_token(token)) {
-            return false;
-        }
-        if (token.type == TOKEN_EOF) {
-            tokenizer.print_err("end of file while parsing ID declaration\n");
-            return false;
-        }
-
-        element_type = token.get_type_name();
-        switch (element_type) {
-        case MDI_UINT8:
-        case MDI_INT32:
-        case MDI_UINT32:
-        case MDI_UINT64:
-        case MDI_BOOLEAN:
-        case MDI_LIST:
-            break;
-        default:
-            tokenizer.print_err("Arrays of type %s are not supported\n",
-                                token.string_value.c_str());
-            return false;
-        }
-
-        if (!tokenizer.next_token(token)) {
-            return false;
-        }
-        if (token.type == TOKEN_EOF) {
-            tokenizer.print_err("end of file while parsing ID declaration\n");
-            return false;
-        }
-        if (token.type != TOKEN_ARRAY_END) {
-            tokenizer.print_err("expected \'[' after array child type\n");
-            return false;
-        }
-    }
-
     // build id_name from string of TOKEN_IDENTIFIER and TOKEN_DOT tokens
     std::string id_name;
     Token token;
@@ -155,13 +103,7 @@ static bool parse_id_declaration(Tokenizer& tokenizer, mdi_type_t type) {
         return false;
     }
 
-    mdi_id_t id;
-    if (element_type == MDI_INVALID_TYPE) {
-        id = MDI_MAKE_ID(type, id_number);
-    } else {
-        id = MDI_MAKE_ARRAY_ID(element_type, id_number);
-    }
-    id_map[id_name] = id;
+    id_map[id_name] = MDI_MAKE_ID(type, id_number);
     id_name_map[id_number] = id_name;
 
 #if PRINT_ID_DECLARATIONS
@@ -291,60 +233,18 @@ static bool parse_list_node(Tokenizer& tokenizer, Node& node, Token& token, Node
     return true;
 }
 
-static bool parse_array_node(Tokenizer& tokenizer, Node& node, Token& token, Node& parent) {
-    if (token.type != TOKEN_ARRAY_START) {
-        tokenizer.print_err("expected array value for node \"%s\", got \"%s\"\n",
-                            node.get_id_name(), token.string_value.c_str());
-        return false;
-    }
-    mdi_type_t element_type = MDI_ID_ARRAY_TYPE(node.get_id());
-    mdi_id_t element_id = MDI_MAKE_ID(element_type, 0);
-
-    while (1) {
-        Token token;
-        if (!tokenizer.next_token(token)) {
-            return false;
-        }
-        if (token.type == TOKEN_EOF) {
-            tokenizer.print_err("end of file while parsing list children\n");
-            return false;
-        } else if (token.type == TOKEN_ARRAY_END) {
-            break;
-        }
-
-        Node element_node(element_id, node.get_id_name());
-
-        switch (element_type) {
-        case MDI_UINT8:
-        case MDI_INT32:
-        case MDI_UINT32:
-        case MDI_UINT64:
-            if (!parse_int_node(tokenizer, element_node, token, node)) {
-                return false;
-            }
-            break;
-        case MDI_BOOLEAN:
-            if (!parse_boolean_node(tokenizer, element_node, token, node)) {
-                return false;
-            }
-            break;
-        case MDI_LIST:
-            if (!parse_list_node(tokenizer, element_node, token, node)) {
-                return false;
-            }
-            break;
-        default:
-            assert(0);
-            break;
-        }
-    }
-
-    parent.add_child(node);
-    return true;
-}
-
 static bool parse_node(Tokenizer& tokenizer, Token& token, Node& parent) {
     mdi_id_t id;
+
+    // handle anonymous list nodes
+    if (token.type == TOKEN_LIST_START) {
+        id = MDI_MAKE_ID(MDI_LIST, 0);
+        Node node(id, parent.get_id_name());
+        return parse_list_node(tokenizer, node, token, parent);
+    } else if (token.type != TOKEN_IDENTIFIER) {
+        tokenizer.print_err("expected identifier or \'{\', got \"%s\"\n", token.string_value.c_str());
+        return false;
+    }
 
     std::string id_name;
     if (strlen(parent.get_id_name()) == 0) {
@@ -389,8 +289,6 @@ static bool parse_node(Tokenizer& tokenizer, Token& token, Node& parent) {
         return parse_boolean_node(tokenizer, node, value, parent);
     case MDI_STRING:
         return parse_string_node(tokenizer, node, value, parent);
-    case MDI_ARRAY:
-        return parse_array_node(tokenizer, node, value, parent);
     default:
         tokenizer.print_err("internal error: Unknown type %d\n", MDI_ID_TYPE(id));
         return false;

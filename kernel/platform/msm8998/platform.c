@@ -196,15 +196,14 @@ static void init_secondary_cpus(void) {
         printf("mdi_list_find_node couldn't find clusters\n");
         return;
     }
-    for (unsigned int i = 0; i < mdi_array_length(&clusters); i++) {
-        mdi_node_ref_t  cluster;
-        if (mdi_array_node(&clusters, i, &cluster) != NO_ERROR) {
-            printf("mdi_array_node couldn't access cluster %u\n", i);
-            return;
-        }
+
+    mdi_node_ref_t  cluster;
+    mx_status_t cluster_status;
+
+    mdi_list_each_child(clusters, cluster, cluster_status) {
         uint32_t cluster_id;
         mdi_node_ref_t node;
-        mdi_node_ref_t cpu_array;
+        mdi_node_ref_t cpus;
 
         if (mdi_list_find_node(&cluster, MDI_CPU_MAP_CLUSTERS_ID, &node) != NO_ERROR) {
             printf("mdi_list_find_node couldn't find cluster id\n");
@@ -214,18 +213,17 @@ static void init_secondary_cpus(void) {
             printf("could not read cluster id\n");
             return;
         }
-        if (mdi_list_find_node(&cluster, MDI_CPU_MAP_CLUSTERS_CPUS, &cpu_array) != NO_ERROR) {
+        if (mdi_list_find_node(&cluster, MDI_CPU_MAP_CLUSTERS_CPUS, &cpus) != NO_ERROR) {
             printf("mdi_list_find_node couldn't find cluster CPUs\n");
             return;
         }
-        for (unsigned int j = 0; j < mdi_array_length(&cpu_array); j++) {
-            mdi_node_ref_t  cpu;
+
+        mdi_node_ref_t  cpu;
+        mx_status_t cpus_status;
+
+        mdi_list_each_child(cpus, cpu, cpus_status) {
             uint32_t cpu_id;
 
-            if (mdi_array_node(&cpu_array, j, &cpu) != NO_ERROR) {
-                printf("mdi_array_node couldn't access CPU %u\n", j);
-                return;
-            }
             if (mdi_list_find_node(&cpu, MDI_CPU_MAP_CLUSTERS_CPUS_ID, &node) != NO_ERROR) {
                 printf("mdi_list_find_node couldn't find CPU id\n");
                 return;

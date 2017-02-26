@@ -34,72 +34,6 @@ static void dump_string(int fd) {
     printf("\"");
 }
 
-static void dump_array_node(int fd, int level, mdi_node_t& node) {
-    uint32_t count = node.value.child_count;
-
-    // offset of node start. element offsets are relative to this
-    off_t node_start = lseek(fd, 0, SEEK_CUR) - sizeof(node);
-
-    printf("[ ");
-    switch (MDI_ID_ARRAY_TYPE(node.id)) {
-    case MDI_UINT8:
-        for (int i = 0; i < count; i++) {
-            uint8_t value;
-            read(fd, &value, sizeof(value));
-            printf("%u ", value);
-        }
-        break;
-    case MDI_INT32:
-        for (int i = 0; i < count; i++) {
-            int32_t value;
-            read(fd, &value, sizeof(value));
-            printf("%d ", value);
-        }
-        break;
-    case MDI_UINT32:
-        for (int i = 0; i < count; i++) {
-            uint32_t value;
-            read(fd, &value, sizeof(value));
-            printf("%u ", value);
-        }
-        break;
-    case MDI_UINT64:
-        for (int i = 0; i < count; i++) {
-            uint64_t value;
-            read(fd, &value, sizeof(value));
-            printf("%" PRIu64 " ", value);
-        }
-        break;
-    case MDI_BOOLEAN:
-        for (int i = 0; i < count; i++) {
-            int8_t value;
-            read(fd, &value, sizeof(value));
-            printf("%s ",  (value ? "true" : "false"));
-        }
-        break;
-    case MDI_LIST:
-        printf("\n");
-        for (int i = 0; i < count; i++) {
-            mdi_offset_t offset;
-            // read element offset
-            read(fd, &offset, sizeof(offset));
-            off_t saved_offset = lseek(fd, 0, SEEK_CUR);
-            lseek(fd, node_start + offset, SEEK_SET);
-            dump_node(fd, level + 1);
-            lseek(fd, saved_offset, SEEK_SET);
-        }
-        print_indent(level);
-        break;
-    default:
-        fprintf(stderr, "bad array element type %d\n", MDI_ID_ARRAY_TYPE(node.id));
-        abort();
-    }
-
-    printf("]");
-
-    lseek(fd, node_start + node.length, SEEK_SET);
-}
-
 static void dump_node(int fd, int level) {
     mdi_node_t node;
 
@@ -146,10 +80,6 @@ static void dump_node(int fd, int level) {
         printf("}");
         break;
     }
-    case MDI_ARRAY:
-        printf("array(%u) = ", id_num);
-        dump_array_node(fd, level, node);
-        break;
     default:
         fprintf(stderr, "unknown type %d\n", type);
     }

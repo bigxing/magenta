@@ -20,8 +20,6 @@ enum TokenType {
     TOKEN_IDENTIFIER,
     TOKEN_LIST_START,       // '{'
     TOKEN_LIST_END,         // '{'
-    TOKEN_ARRAY_START,      // '['
-    TOKEN_ARRAY_END,        // ']'
     TOKEN_EQUALS,           // '='
     TOKEN_DOT,              // '.'
 
@@ -35,7 +33,6 @@ enum TokenType {
     TOKEN_UINT64_TYPE,      // "uint64"
     TOKEN_BOOLEAN_TYPE,     // "boolean"
     TOKEN_STRING_TYPE,      // "string"
-    TOKEN_ARRAY_TYPE,       // "array"
     TOKEN_LIST_TYPE,        // "list"
 };
 

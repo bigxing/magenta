@@ -8,22 +8,17 @@ test-boolean-true = true
 test-boolean-false = false
 test-string = "hello"
 
-test-bool-array = [ true false true ]
-test-uint8-array = [ 1 2 3 ]
-test-int32-array = [ -1 -2 -3 ]
-test-uint32-array = [ 1 2 3 ]
-test-uint64-array = [ 0x100000000 0x200000000 0x300000000 ]
-test-list-array = [
-                    {
-                        int = 1
-                        str = "one"
-                    }
-                    {
-                        int = 2
-                        str = "two"
-                    }
-                    {
-                        int = 3
-                        str = "three"
-                    }
-                ]
+test-list = {
+    {
+        int = 1
+        str = "one"
+    }
+    {
+        int = 2
+        str = "two"
+    }
+    {
+        int = 3
+        str = "three"
+    }
+}

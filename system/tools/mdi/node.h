@@ -15,7 +15,7 @@ private:
     mdi_id_t id;
     std::string id_name;            // fully scoped name of this node
     uint32_t serialized_length;     // length of this node when serialized to output file
-    std::vector<Node> children;     // child nodes (for lists and arrays)
+    std::vector<Node> children;     // child nodes
 
 public:
     uint64_t int_value;             // used for integer and boolean types
@@ -34,7 +34,7 @@ public:
     }
 
     inline void print() {
-        print(0, false);
+        print(0);
     }
 
     void compute_node_length();
@@ -42,7 +42,6 @@ public:
 
 private:
     void print_indent(int depth);
-    void print_children(int depth, bool in_array);
-    void print(int depth, bool in_array);
-    void compute_array_length();
+    void print_children(int depth);
+    void print(int depth);
 };
